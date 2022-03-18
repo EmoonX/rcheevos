@@ -698,6 +698,12 @@ static int rc_hash_lynx(char hash[33], const uint8_t* buffer, size_t buffer_size
   return rc_hash_buffer(hash, buffer, buffer_size);
 }
 
+static int rc_hash_dos(char hash[33], const char* path)
+{
+  puts("MS-DOS IS THE CHOICE!");
+  return hash;
+}
+
 static int rc_hash_nes(char hash[33], const uint8_t* buffer, size_t buffer_size)
 {
   /* if the file contains a header, ignore it */
@@ -1946,6 +1952,9 @@ int rc_hash_generate_from_file(char hash[33], int console_id, const char* path)
 
     case RC_CONSOLE_ARCADE:
       return rc_hash_arcade(hash, path);
+    
+    case RC_CONSOLE_MS_DOS:
+      return rc_hash_dos(hash, path);
 
     case RC_CONSOLE_NINTENDO_64:
       return rc_hash_n64(hash, path);
@@ -2078,6 +2087,9 @@ void rc_hash_initialize_iterator(struct rc_hash_iterator* iterator, const char* 
   do
   {
     const char* ext = rc_path_get_extension(path);
+
+    fprintf(stderr, "File extension: %s", ext);
+
     switch (tolower(*ext))
     {
       case '2':
@@ -2186,6 +2198,12 @@ void rc_hash_initialize_iterator(struct rc_hash_iterator* iterator, const char* 
           iterator->consoles[1] = RC_CONSOLE_SHARPX1;
         }
         break;
+      
+      case 'e':
+        if (rc_path_compare_extension(ext, "exe"))
+        {
+          iterator->consoles[0] = RC_CONSOLE_MS_DOS;
+        }
 
       case 'f':
         if (rc_path_compare_extension(ext, "fig"))
