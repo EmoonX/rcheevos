@@ -698,9 +698,30 @@ static int rc_hash_lynx(char hash[33], const uint8_t* buffer, size_t buffer_size
   return rc_hash_buffer(hash, buffer, buffer_size);
 }
 
+#include <dirent.h>
+
 static int rc_hash_dos(char hash[33], const char* path)
 {
   puts("MS-DOS IS THE CHOICE!");
+
+  /* get directory path */
+  char dir_path[1024];
+  const char* slash = strrchr(path, '\\');
+  size_t len = slash - path + 1;
+  strncpy(dir_path, path, len);
+  dir_path[len] = '\0';
+
+  /* iterate over directory files */
+  DIR* d;
+  struct dirent* dir;
+  d = opendir(dir_path);
+  if (d)
+  {
+    while ((dir = readdir(d)) != NULL)
+    {
+      puts(dir->d_name);
+    }
+  }
   return hash;
 }
 
@@ -2087,9 +2108,6 @@ void rc_hash_initialize_iterator(struct rc_hash_iterator* iterator, const char* 
   do
   {
     const char* ext = rc_path_get_extension(path);
-
-    fprintf(stderr, "File extension: %s", ext);
-
     switch (tolower(*ext))
     {
       case '2':
