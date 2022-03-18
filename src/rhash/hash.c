@@ -718,20 +718,27 @@ static int rc_hash_dos(char hash[33], const char* path)
   if (d)
   {
     struct dirent* ent;
+    uint8_t buffer[1024];
+    size_t count = 0;
     while ((ent = readdir(d)) != NULL)
     {
       if (ent->d_name[0] == '.')
         continue;
 
-      /* get hash from single file */
+      /* get single file hash and concatenate to buffer */
       char* file_path = dir_path;
       strcpy(file_path + dir_len, ent->d_name);
-      char single_hash[33];
-      rc_hash_whole_file(single_hash, file_path);
-      printf("%s: %s\n", ent->d_name, single_hash);
+      rc_hash_whole_file(hash, file_path);
+      printf("%s: %s\n", ent->d_name, hash);
+      strcat((char*) buffer, hash);
+      count++;
     }
+    
+    /* final hash is calculated from concatenated ones */
+    rc_hash_buffer(hash, buffer, 32 * count);
+    printf("Final hash: %s\n", hash);
   }
-  
+
   return hash;
 }
 
