@@ -11,6 +11,7 @@
 #define MAX_BUFFER_SIZE 64 * 1024 * 1024
 
 const char* rc_path_get_filename(const char* path);
+static int rc_hash_whole_file(char hash[33], const char* path);
 
 /* ===================================================== */
 
@@ -705,23 +706,32 @@ static int rc_hash_dos(char hash[33], const char* path)
   puts("MS-DOS IS THE CHOICE!");
 
   /* get directory path */
-  char dir_path[1024];
+  char dir_path[256];
   const char* slash = strrchr(path, '\\');
-  size_t len = slash - path + 1;
-  strncpy(dir_path, path, len);
-  dir_path[len] = '\0';
+  size_t dir_len = slash - path + 1;
+  strncpy(dir_path, path, dir_len);
+  dir_path[dir_len] = '\0';
 
   /* iterate over directory files */
   DIR* d;
-  struct dirent* dir;
   d = opendir(dir_path);
   if (d)
   {
-    while ((dir = readdir(d)) != NULL)
+    struct dirent* ent;
+    while ((ent = readdir(d)) != NULL)
     {
-      puts(dir->d_name);
+      if (ent->d_name[0] == '.')
+        continue;
+
+      /* get hash from single file */
+      char* file_path = dir_path;
+      strcpy(file_path + dir_len, ent->d_name);
+      char single_hash[33];
+      rc_hash_whole_file(single_hash, file_path);
+      printf("%s: %s\n", ent->d_name, single_hash);
     }
   }
+  
   return hash;
 }
 
